@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Walking tour (GEOG 464 template)</title>
+<!--
+  GEOG 464 walking-tour template. One file, no libraries, works on a phone.
+  TO MAKE YOUR TOUR: change only TITLE, INTRO and the STOPS list in the script below.
+  Everything else (big buttons, read aloud, GPS distance, map links) already works.
+  GPS needs the page to be served over https (GitHub Pages is fine).
+  © 2026 Luke Russell. All rights reserved. Students may copy and adapt it for GEOG 464.
+-->
+<style>
+  :root { --navy:#1F2D5A; --gold:#DCBD23; --cream:#FBEBD0; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; background:var(--navy); color:#fff; line-height:1.5; }
+  header { padding:18px 18px 8px; }
+  h1 { margin:0 0 6px; font-size:26px; }
+  #intro { margin:0; opacity:.9; }
+  main { padding:12px 18px 120px; }
+  .card { background:var(--cream); color:var(--navy); border-radius:14px; padding:18px; }
+  .count { font-size:14px; font-weight:bold; letter-spacing:.05em; text-transform:uppercase; color:#6b5a12; }
+  h2 { margin:6px 0 10px; font-size:24px; }
+  .text { font-size:20px; margin:0 0 14px; }
+  .dirs { font-size:19px; border-left:6px solid var(--gold); padding:8px 12px; background:#fff; border-radius:8px; }
+  .dirs b { display:block; font-size:14px; text-transform:uppercase; letter-spacing:.05em; }
+  .row { display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+  button, a.btn { flex:1; min-height:52px; font-size:18px; font-weight:bold; border:0; border-radius:10px; padding:10px; cursor:pointer;
+                  background:var(--navy); color:#fff; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center; }
+  button.alt, a.alt { background:#fff; color:var(--navy); border:2px solid var(--navy); }
+  button:focus-visible, a.btn:focus-visible { outline:4px solid var(--gold); outline-offset:2px; }
+  label { display:flex; gap:10px; align-items:center; font-size:17px; margin-top:12px; }
+  input[type=checkbox] { width:24px; height:24px; }
+  #gps { font-size:17px; margin-top:10px; min-height:1.5em; }
+  .safety { margin-top:16px; font-size:15px; opacity:.9; }
+  nav { position:fixed; left:0; right:0; bottom:0; display:flex; gap:10px; padding:12px 18px; background:var(--navy); border-top:3px solid var(--gold); }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <p id="intro"></p>
+</header>
+<main>
+  <section class="card" aria-live="polite">
+    <div class="count" id="count"></div>
+    <h2 id="name"></h2>
+    <p class="text" id="text"></p>
+    <div class="dirs"><b>Next: how to get there</b><span id="dirs"></span></div>
+    <div class="row">
+      <button id="speak" type="button">Read aloud</button>
+      <a id="maplink" class="btn alt" target="_blank" rel="noopener">Open in Maps</a>
+    </div>
+    <label><input type="checkbox" id="readDirs" checked> Read the directions too (phone can stay in your pocket)</label>
+    <div class="row"><button id="where" class="alt" type="button">How far is this stop?</button></div>
+    <p id="gps"></p>
+  </section>
+  <p class="safety">Signs, signals and your own judgment come first. Stop on the sidewalk to read; phone down while you cross.</p>
+</main>
+<nav>
+  <button id="prev" class="alt" type="button">Back</button>
+  <button id="next" type="button">Next stop</button>
+</nav>
+
+<script>
+// ===== CHANGE ONLY THIS PART =====
+const TITLE = "Cheap eats: three meals under $10";
+// CHECK: "under $10" at every stop. Look at each current menu, before tax, the week you publish.
+const INTRO = "The three best-rated cheap spots near campus, in rating order: bagels, shawarma, then a Lebanese bakery. Starts and ends at the Hall Building, 1455 De Maisonneuve Blvd W.";
+// lat and lon are optional: they turn on "Open in Maps" and "How far is this stop?".
+// Facts in "text" must be true: check each one before anyone walks the tour.
+// Restaurant lat/lon come from OpenStreetMap (Nov 2026). The Hall Building's are the template's.
+// Stops are ordered by rating (high to low). CHECK each rating on Google before publishing:
+//   Hinnawi Bros 4.4 (RestoMontreal score, 192 ratings, not Google), Boustan 4.3 (Google, 3,400+),
+//   Al-Taib 4.0 (Google, 1,400+).
+const STOPS = [
+  { name: "Start: the Hall Building", lat: 45.4972, lon: -73.5790,
+    text: "Welcome. This tour visits the three best-rated cheap spots nearby, best first: bagels, shawarma, then a Lebanese bakery.",
+    directions: "Leave by the main doors onto De Maisonneuve and turn right. Walk to the corner of Mackay and cross Mackay. Turn right up Mackay. Hinnawi Bros is a few steps up, at number 2002." },
+
+  { name: "Stop 1: Hinnawi Bros, 2002 Mackay (bagels)", lat: 45.49663, lon: -73.57902,
+    // CHECK: "a quick bite before or after classes" comes from reviews (Quoifaire). Find one bagel sandwich under $10.
+        // Story sources: Mackay Street (Wikipedia); Concordia Archives, Active History, CBC (1969 protest; the cautious figures are used);
+    //   Tourisme Montréal (bagel history); Cult MTL 2013, Dubé Loiselle, 514eats (Hinnawi Bros).
+    // CHECK: the brothers' first names and the year the Mackay shop opened weren't found, so they are left out.
+    text: "Here is a street name worth reading. Mackay Street is named for James Mackay (1760–1822), a trader and explorer for the North West Company who arrived in Montreal in 1776. This little street is named after the fur trade, the business that built Montreal's early fortunes. Now look across Mackay at the large concrete building: the Hall Building. On January 29, 1969, about 200 students at Sir George Williams University, now Concordia, barricaded themselves in the Computer Centre on its ninth floor. They were protesting racist discrimination faced by six West Indian students. The standoff lasted 13 days, and it ended badly. On February 11, 1969, a fire broke out in the Computer Centre, the equipment was severely damaged, and police arrested 97 people, Black and white students among them. The protest still left lasting change. Students gained seats on the university's decision-making bodies, and in April 1971 the university adopted regulations on rights and responsibilities and set up an Ombuds office. That's the heavy history. Hinnawi Bros is the newcomer on this walk, but it has its own story. Montreal is famous for bagels. Isadore Shlafman and Jacob Drapkin are said to have brought the bagel to Montreal, in a back-alley bakery off Saint-Laurent Boulevard. Its address first appears on record in 1932, but it may have opened as early as 1919. Strangely, Montreal had almost nowhere selling bagel sandwiches. One of the Hinnawi brothers had spent time in California and wondered why a city so famous for its bagels had so few of the bagel sandwiches found everywhere in the U.S. To test the idea, the brothers first bought their bagels from a local producer. When that worked, they brought in experts to develop their own recipe. Their first shop opened on Sherbrooke East in 2013. They then opened three more in the busy university and office areas around McGill and Concordia, including this one across from the Hall Building.",
+    directions: "Walk back down Mackay to De Maisonneuve and turn left. Cross Mackay, then walk east past the Hall Building and across Bishop. At Crescent, turn left. Boustan is a few doors up on your left, at 2020A." },
+
+  { name: "Stop 2: Boustan, 2020A Crescent (shawarma)", lat: 45.49805, lon: -73.57784,
+    // Founded 1986; Pierre Elliott Trudeau as a regular: both from Wikipedia. CHECK with a second source, and find a pita under $10.
+        // Story sources: Crescent Street (Wikipedia); Montreal Gazette 2012, "'Mr. Boustan' sells his resto"; Boustan (Wikipedia).
+    // Founder is Imad Smaidi per the Gazette (some Wikipedia copies say "Karim Saab", likely vandalism).
+    text: "Crescent Street was not always a party street. It opened around 1860 and was first laid out in a curved, crescent shape. For about a century it was mostly home to professional offices. That changed in 1967, when the Sir Winston Churchill Pub opened as the street's first bar. Today De Maisonneuve splits Crescent in two. North of it, where you are now, are luxury boutiques and art galleries in Victorian buildings, along with Boustan. South of it are nightclubs, bars and restaurants. The man behind Boustan was Imad Smaidi, and he had an unusual life. He was born in Beirut and orphaned at nine, and he cared for his four younger siblings while working and going to school. After high school he went to military college and became a police officer in Beirut. When civil war broke out in the mid-1970s, he came to Montreal, arriving in 1976. In his own words: \"I came to this country with nothing in 1976.\" He didn't start out in restaurants. He studied at École Polytechnique de Montréal, became an industrial engineer, and rose through the ranks at the electronics company Philips. Then, on a whim, he opened a Lebanese restaurant on Crescent Street in 1986, and he ran it for 26 years. The name fits: boustan is the Arabic word for orchard. The restaurant moved several times before settling here, at 2020A Crescent. His customers ranged from students and late-night crowds to the very famous. Former Prime Minister Pierre Trudeau often visited, and so did players from the Canadiens and the Alouettes. The work took a toll: he was exhausted from working up to 18-hour days, often seven days a week. In 2012 he sold the restaurant to three local businessmen, including George and Peter Hatzis, a father and son he mentored for six months first. \"I will miss my customers so much,\" he said. After that, Boustan grew into a chain. A second shop opened at 19 Sainte-Catherine East in 2014, and by 2022 Boustan had reached Ontario, including Ottawa. But every location goes back to this one, and to an orphan from Beirut who became an engineer and then fed Crescent Street for 26 years.",
+    // CHECK: walk it. This leg passes the Hall Building on the way west.
+    directions: "Walk back down Crescent to De Maisonneuve and turn right. Walk west past Bishop, the Hall Building and Mackay, all the way to Guy. Cross Guy at the light. Al-Taib is on the far corner, just up from De Maisonneuve." },
+
+  { name: "Stop 3: Al-Taib, Guy at De Maisonneuve (Lebanese bakery)", lat: 45.49551, lon: -73.57973,
+    // OpenStreetMap puts Al-Taib on the west side of Guy near De Maisonneuve; listings give 2125 Guy. CHECK the door.
+    // "First store November 1995 on Guy Street" is from Zabihah's listing. CHECK with a second source, and name one item under $10.
+        // Story sources: Guy Street (Wikipedia); MuslimLink and Zabihah (Al-Taib).
+    // CHECK: "open 24 hours" against current hours, and the "almost 20 years" review is still posted.
+    text: "Stop here and look at the street sign. Guy Street was named on August 30, 1817, for Étienne Guy (1774–1820), a notary who represented Montreal in the Lower Canada Assembly. For more than 200 years this street has carried people up and down the slope between the river and the mountain. It has always been busy. Look south, toward René-Lévesque Boulevard, which used to be called Dorchester. From 1869, the Grey Nuns had their convent on Guy Street at the corner of Dorchester. That building is still there, but it changed hands: Concordia University bought the Grey Nuns' Motherhouse in 2007. Guy Street was also a place for nights out. From 1898 to 1963 it was home to Her Majesty's Theatre, a key performing arts venue. Now jump to the 1990s. Downtown Montreal was full of students, office workers and night owls, but there was almost nowhere to get a fresh manakish. Then, in November 1995, Al-Taib opened its first shop here on Guy Street. It was small, and it was one of the first bakeries to bring Middle Eastern specialties downtown. The recipe for success was simple: good food at low prices, close to a university. With Guy-Concordia metro right here and the campus all around, students found it quickly, and it soon became one of Concordia's popular places to eat. What makes Al-Taib a Montreal institution is that it never closes. It is open 24 hours, so this counter serves everyone, from students to night-shift workers craving comfort food. People come in at noon for a za'atar flatbread and at 3 a.m. for a slice of pizza. Some customers have been coming for decades. One recent reviewer wrote that they had been coming to Al-Taib for almost 20 years. Think about how much this corner has changed in that time: new towers, new buildings for Concordia, whole generations of students arriving and graduating. Through all of it, the ovens on Guy Street have kept going, day and night, for thirty years.",
+    directions: "Cross back over Guy and walk east on De Maisonneuve, past Mackay. The Hall Building is on your left." },
+
+  { name: "Back at the Hall Building", lat: 45.4972, lon: -73.5790,
+    text: "That is the end of the tour. Three meals, three kinds of food, and all of it a few blocks from class.",
+    directions: "You are here." },
+];
+// ===== END OF THE PART TO CHANGE =====
+
+let i = 0;
+const $ = (id) => document.getElementById(id);
+
+function show() {
+  const s = STOPS[i];
+  $("title").textContent = TITLE;
+  $("intro").textContent = INTRO;
+  $("count").textContent = "Stop " + (i + 1) + " of " + STOPS.length;
+  $("name").textContent = s.name;
+  $("text").textContent = s.text;
+  $("dirs").textContent = s.directions;
+  $("prev").disabled = i === 0;
+  $("next").textContent = i === STOPS.length - 1 ? "Finished" : "Next stop";
+  const has = typeof s.lat === "number" && typeof s.lon === "number";
+  $("maplink").style.display = has ? "" : "none";
+  $("where").style.display = has ? "" : "none";
+  if (has) $("maplink").href = "https://www.openstreetmap.org/?mlat=" + s.lat + "&mlon=" + s.lon + "#map=18/" + s.lat + "/" + s.lon;
+  $("gps").textContent = "";
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  window.scrollTo(0, 0);
+}
+
+function speak() {
+  if (!("speechSynthesis" in window)) { $("gps").textContent = "This browser cannot read aloud. The text is all on the screen."; return; }
+  const s = STOPS[i];
+  let words = s.name + ". " + s.text;
+  if ($("readDirs").checked) words += " Next: " + s.directions;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(words));
+}
+
+function metres(a, b, c, d) {
+  const R = 6371000, r = Math.PI / 180;
+  const x = Math.sin((c - a) * r / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin((d - b) * r / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+function where() {
+  const s = STOPS[i];
+  if (!("geolocation" in navigator) || !window.isSecureContext) {
+    $("gps").textContent = "Location needs the https address (GitHub Pages). The directions above still work.";
+    return;
+  }
+  $("gps").textContent = "Finding you...";
+  navigator.geolocation.getCurrentPosition(
+    (p) => { const m = metres(p.coords.latitude, p.coords.longitude, s.lat, s.lon);
+             $("gps").textContent = "About " + Math.round(m / 10) * 10 + " m away in a straight line (GPS can be off by 20 m or more between tall buildings)."; },
+    () => { $("gps").textContent = "Could not get your location. Follow the directions above."; },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+$("prev").addEventListener("click", () => { if (i > 0) { i--; show(); } });
+$("next").addEventListener("click", () => { if (i < STOPS.length - 1) { i++; show(); } });
+$("speak").addEventListener("click", speak);
+$("where").addEventListener("click", where);
+show();
+</script>
+</body>
+</html>
